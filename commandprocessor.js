@@ -10,79 +10,9 @@ function Token(type, value) {
     }
 }
 
-function CommandProcessor() {
+function CommandProcessor(commands) {
     let self = this;
-    this.commands = [
-        {
-            name: "say",
-            description: "Writes down all the arguments given",
-            adminOnly: false,
-            usage: "-say 'arg1' 'arg2' ...",
-            action: function (msg, arguments) {
-                arguments.forEach(arg => {msg.reply(arg.value)});
-            }
-        },
-        {
-            name: "add_command",
-            description: "Creates a command",
-            adminOnly: true,
-            usage: "-add_command 'name' 'description' 'usage' 'admin only? true : false' 'msg' 'arguments' 'function body'",
-            action: function (msg, arguments) {
-                if (arguments.length >= 3) {
-                    let name = arguments.shift().value;
-                    let commandNames = [];
-                    self.commands.forEach(command => {commandNames.push(command.name)});
-                    if (commandNames.includes(name)) throw {message: "Such command already exists!"};
-                    let description = arguments.shift().value;
-                    let usage = arguments.shift().value;
-                    let adminOnly = arguments.shift().value;
-                    let functionBody = arguments.pop().value;
-                    let functionArguments = [];
-                    arguments.forEach(arg => functionArguments.push(arg.value));
-                    let action;
-                    try {
-                        action = new Function(...functionArguments, functionBody);
-                    } catch (e) {
-                        throw {message: "Invalid function"};
-                    }
-                    self.commands.push({
-                        name: name,
-                        description: description,
-                        usage: usage,
-                        adminOnly: adminOnly,
-                        action: action
-                    });
-                    msg.reply('Command "' + name + '" successfully created!');
-                } else {
-                    throw {message: "Invalid number of arguments"};
-                }
-            }
-        },
-        {
-            name: "help",
-            description: "Helps with understanding commands :)",
-            usage: "help ?command",
-            adminOnly: false,
-            action: function (msg, arguments) {
-                if (arguments.length === 0) {
-                    let string = 'All commands list:\n\t';
-                    let commandNames = [];
-                    self.commands.forEach(command => {commandNames.push(command.name)});
-                    string += commandNames.join('\n\t');
-                    msg.reply(string);
-                } else if (arguments.length === 1) {
-                    let command = arguments[0].value;
-                    let commandObject;
-                    self.commands.forEach(comm => {
-                        if (comm.name === command.toLowerCase()) commandObject = comm;
-                    });
-                    if (typeof commandObject === "undefined") throw {message: "Such a command doesn't exist"};
-                    let string = "Command name: " + commandObject.name + "\nCommand description: " + commandObject.description + "\nCommand usage: " + commandObject.usage + (commandObject.adminOnly ? "\nAdmin only!" : "");
-                    msg.reply(string);
-                }
-            }
-        }
-    ];
+    this.commands = commands;
     this.process = function (command, msg) {
         let rules = [
             {type: "VALUE_NUMBER", regexp: "(\\d+)(\\.\\d+)?"},
